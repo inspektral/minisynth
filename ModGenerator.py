@@ -17,7 +17,22 @@ class ModGenerator:
         self.duration = duration
         self.samples = int(sr * duration)
 
-    def render(self, min:float=0.0, max:float=1.0, scale:ModScale=ModScale.LINEAR):
+    # def render(self, min:float=0.0, max:float=1.0, scale:ModScale=ModScale.LINEAR):
+        
+    #     env = self._get_env()
+        
+    #     if scale == ModScale.LOGARITHMIC:
+    #         if min == 0:
+    #             env = max * (env ** 2)
+    #         else:
+    #             env = min * (max / min) ** env
+    #     elif scale == ModScale.LINEAR:
+    #         env = min + (max - min) * env
+
+    #     return env
+    
+
+    def render(self):
         env =np.zeros(self.samples)
 
         for i in range(1, self.points.shape[1]):
@@ -33,18 +48,11 @@ class ModGenerator:
             segment += start_amplitude
 
             env[start_index:end_index] = segment
-        
-        if scale == ModScale.LOGARITHMIC:
-            if min == 0:
-                env = max * (env ** 2)
-            else:
-                env = min * (max / min) ** env
-        elif scale == ModScale.LINEAR:
-            env = min + (max - min) * env
 
         return env
 
-    def init_points_random(self, num_points=16, convexity=3.0):
+
+    def init_points_random(self, num_points=16, min:float= 0.0, max:float=1.0, convexity=3.0, scale:ModScale=ModScale.LINEAR):
 
         if num_points < 2:
             raise ValueError("At least two points are required")
@@ -56,6 +64,14 @@ class ModGenerator:
         self.points[Mod.TIME.value,:] = np.round(self.points[Mod.TIME.value,:]*self.samples)
         self.points[Mod.TIME.value,0] = 0
         self.points[Mod.TIME.value,-1] = self.samples
+
+        if scale == ModScale.LOGARITHMIC:
+            if min == 0:
+                self.points[Mod.AMPLITUDE.value,:] = max * (self.points[Mod.AMPLITUDE.value,:] ** 2)
+            else:
+                self.points[Mod.AMPLITUDE.value,:] = min * (max / min) ** self.points[Mod.AMPLITUDE.value,:]
+        elif scale == ModScale.LINEAR:
+            self.points[Mod.AMPLITUDE.value,:] = min + (max - min) * self.points[Mod.AMPLITUDE.value,:]
 
         self.points[Mod.CONVEXITY.value,:]*= convexity
 
