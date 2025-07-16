@@ -21,14 +21,18 @@ class WavetableGenerator:
         blend_positions = np.linspace(0, 1, self.blend_values)
         wavetable = interp(blend_positions)
 
+        for i, wave in enumerate(waves):
+            exact_position = int(i * (self.blend_values - 1) / (len(waves) - 1))
+            wavetable[exact_position, :] = wave
+
         return wavetable
     
     def sine(self):
-        return np.sin(np.linspace(0, 2 * np.pi, self.samples))
+        return np.sin(np.linspace(0, 2 * np.pi, self.samples, endpoint=False))
     
     def triangular(self):
-        rising = np.linspace(-1, 1, int(self.samples / 2))
-        falling = np.linspace(1, -1, int(self.samples / 2))
+        rising = np.linspace(-1, 1, int(self.samples / 2), endpoint=False)
+        falling = np.linspace(1, -1, int(self.samples / 2), endpoint=False)
         wave = np.concatenate((rising, falling))
         
         phase_shift = int(-self.samples / 4)
@@ -38,7 +42,7 @@ class WavetableGenerator:
         return np.sign(self.sine())
     
     def sawtooth(self):
-        return np.linspace(1, -1, self.samples)
+        return np.linspace(1, -1, self.samples, endpoint=False)
     
     def preset(self, preset):
         presets = {

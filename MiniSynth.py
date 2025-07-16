@@ -1,5 +1,5 @@
 import numpy as np
-print("imports done")
+from scipy.signal import butter, filtfilt
 
 class MiniSynth:
     def __init__(self, wavetable, sr=44100, duration=10.0):
@@ -11,38 +11,58 @@ class MiniSynth:
             raise ValueError("Wavetable must be provided.")
         self.wavetable = wavetable
 
-        self.base_freq = 440.0
-        self.amp = 1.0
+        self.set_base_freq(np.array([440.0]))
+        self.set_amp(np.array([1.0]))
 
-        self.mod_freq_ratio = 1.0
-        self.mod_shape = 0.0
+        self.set_mod_freq_ratio(np.array([1.0]))
+        self.set_mod_shape(np.array([0.0]))
         
-        self.carr_shape = [0.0]
-        self.fm_amount = 0.0
+        self.set_carr_shape(np.array([0.0]))
+        self.set_fm_amount(np.array([0.0]))
     
+    def set_base_freq(self, freq:np.ndarray):
+        self._base_freq = self._stretch_array(freq, self.samples)
+
+    def set_amp(self, amp:np.ndarray):
+        self._amp = self._stretch_array(amp, self.samples)
+
+    def set_mod_freq_ratio(self, ratio:np.ndarray):
+        self._mod_freq_ratio = self._stretch_array(ratio, self.samples)
+
+    def set_mod_shape(self, shape:np.ndarray):
+        self._mod_shape = self._stretch_array(shape, self.samples)
+
+    def set_carr_shape(self, shape:np.ndarray):
+        self._carr_shape = self._stretch_array(shape, self.samples)
+
+    def set_fm_amount(self, amount:np.ndarray):
+        self._fm_amount = self._stretch_array(amount, self.samples)
+
 
     def render(self):
-        mod_audio = self.wavetable_osc(
-            frequency=np.array([self.base_freq * self.mod_freq_ratio]),
-            shape=np.array([self.mod_shape]),
+        mod_audio = self._wavetable_osc(
+            frequency=self._base_freq * self._mod_freq_ratio,
+            shape=self._mod_shape,
             wavetable=self.wavetable
         )
-        print(f"mod_audio shape: {mod_audio.shape}, samples: {self.samples}")
-        carr_audio = self.wavetable_osc(
-            frequency=mod_audio * self.fm_amount * self.base_freq + self.base_freq,
-            shape=np.array(self.carr_shape),
-            wavetable=self.wavetable
-        )
-        return self.amp * carr_audio
-    
 
-    def wavetable_osc(self, frequency, shape, wavetable):
-        frequencies = self.stretch_array(frequency, self.samples)
-        shapes = self.stretch_array(shape, self.samples)
+        frequency = mod_audio * self._fm_amount * self._base_freq + self._base_freq
+
+        carr_audio = self._wavetable_osc(
+            frequency=frequency,
+            shape=self._carr_shape,
+            wavetable=self.wavetable
+        )
+        audio =  self._amp * carr_audio
+        audio = self._apply_antialiasing(audio)
         
-        phase = np.cumsum(frequencies) / self.sr
+        return audio
+    
+    def _wavetable_osc(self, frequency, shape, wavetable):
         
-        wave_indices_float = shapes * (wavetable.shape[0] - 1)
+        phase = np.cumsum(frequency) / self.sr
+        
+        wave_indices_float = shape * (wavetable.shape[0] - 1)
         wave_idx1 = np.clip(wave_indices_float.astype(int), 0, wavetable.shape[0] - 1)
         wave_idx2 = np.clip(wave_idx1 + 1, 0, wavetable.shape[0] - 1)
         wave_blend = wave_indices_float - wave_idx1
@@ -55,14 +75,25 @@ class MiniSynth:
         
         return output
     
+    def __str__(self):
+        return (f"MiniSynth(sampling_rate={self.sr}, duration={self.duration}, "
+                f"base_freq={self._base_freq}, amp={self._amp}, "
+                f"mod_freq_ratio={self._mod_freq_ratio}, mod_shape={self._mod_shape}, "
+                f"carr_shape={self._carr_shape}, fm_amount={self._fm_amount})")
     
-    def stretch_array(self, arr:np.ndarray, target_length:int):
+    def _stretch_array(self, arr:np.ndarray, target_length:int):
         old_indices = np.arange(len(arr))
         new_indices = np.linspace(0, len(arr) - 1, target_length)
         
         return np.interp(new_indices, old_indices, arr)
+    
+    def _apply_antialiasing(self, audio):
         
-if __name__ == "__main__":
-    synth = MiniSynth()
-    audio = synth.render()
-    print(audio)
+        cutoff = self.sr / 2.2
+        nyquist = self.sr / 2
+        normalized_cutoff = cutoff / nyquist
+        
+        b, a = butter(4, normalized_cutoff, btype='low')
+        audio = filtfilt(b, a, audio)
+        
+        return audio

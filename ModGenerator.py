@@ -6,15 +6,18 @@ class Mod(Enum):
     AMPLITUDE = 1
     CONVEXITY = 2
 
-class ModGenerator:
+class ModScale(Enum):
+    LINEAR = 0
+    LOGARITHMIC = 1
 
+class ModGenerator:
 
     def __init__(self, sr=44100, duration=10.0):
         self.sr = sr
         self.duration = duration
         self.samples = int(sr * duration)
 
-    def render(self):
+    def render(self, min:float=0.0, max:float=1.0, scale:ModScale=ModScale.LINEAR):
         env =np.zeros(self.samples)
 
         for i in range(1, self.points.shape[1]):
@@ -31,9 +34,21 @@ class ModGenerator:
 
             env[start_index:end_index] = segment
         
+        if scale == ModScale.LOGARITHMIC:
+            if min == 0:
+                env = max * (env ** 2)
+            else:
+                env = min * (max / min) ** env
+        elif scale == ModScale.LINEAR:
+            env = min + (max - min) * env
+
         return env
 
     def init_points_random(self, num_points=16, convexity=3.0):
+
+        if num_points < 2:
+            raise ValueError("At least two points are required")
+        
         self.points = np.random.rand(3, num_points)
 
         self.points[Mod.TIME.value,:] = np.sort(self.points[Mod.TIME.value,:])
