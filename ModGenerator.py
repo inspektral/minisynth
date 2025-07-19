@@ -1,14 +1,11 @@
 import numpy as np
 from enum import Enum
+from Scale import Scale
 
 class Mod(Enum):
     TIME = 0
     AMPLITUDE = 1
     CONVEXITY = 2
-
-class ModScale(Enum):
-    LINEAR = 0
-    LOGARITHMIC = 1
 
 class ModGenerator:
 
@@ -52,7 +49,7 @@ class ModGenerator:
         return env
 
 
-    def init_points_random(self, num_points=16, min:float= 0.0, max:float=1.0, convexity=3.0, scale:ModScale=ModScale.LINEAR):
+    def init_points_random(self, num_points=16, min:float= 0.0, max:float=1.0, convexity=3.0, scale:Scale=Scale.LINEAR):
 
         if num_points < 2:
             raise ValueError("At least two points are required")
@@ -65,12 +62,12 @@ class ModGenerator:
         self.points[Mod.TIME.value,0] = 0
         self.points[Mod.TIME.value,-1] = self.samples
 
-        if scale == ModScale.LOGARITHMIC:
+        if scale == Scale.LOGARITHMIC:
             if min == 0:
                 self.points[Mod.AMPLITUDE.value,:] = max * (self.points[Mod.AMPLITUDE.value,:] ** 2)
             else:
                 self.points[Mod.AMPLITUDE.value,:] = min * (max / min) ** self.points[Mod.AMPLITUDE.value,:]
-        elif scale == ModScale.LINEAR:
+        elif scale == Scale.LINEAR:
             self.points[Mod.AMPLITUDE.value,:] = min + (max - min) * self.points[Mod.AMPLITUDE.value,:]
 
         self.points[Mod.CONVEXITY.value,:]*= convexity
