@@ -50,9 +50,13 @@ class MiniSynth(ABC):
         
         return output
 
-    def square_saw_osc(self, frequency, blend):
-        pass
-        
+    def _square_saw_osc(self, frequency:np.ndarray, blend:np.ndarray) -> np.ndarray:
+        phase = np.cumsum(frequency) / self.sr % 1.0
+        square_wave =  np.sign(np.sin(2 * np.pi * phase))
+        saw_wave = (phase % 1.0) * 2 - 1
+
+        return square_wave * (1 - blend) + saw_wave * blend
+    
 
     def _stretch_array(self, arr:np.ndarray, target_length:int):
         old_indices = np.arange(len(arr))
@@ -70,3 +74,7 @@ class MiniSynth(ABC):
         audio = filtfilt(b, a, audio)
         
         return audio
+    
+    def _lowpass(self, data, cutoff=20.0, order=4):
+        b, a = butter(order, cutoff / (0.5 * self.sr), btype='low')
+        return filtfilt(b, a, data)

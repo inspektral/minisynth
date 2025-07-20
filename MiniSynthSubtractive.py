@@ -24,25 +24,25 @@ class MiniSynthSubtractive(MiniSynth):
         return self._base_freq
 
     def set_base_freq(self, freq:np.ndarray):
-        self._base_freq = self._stretch_array(freq, self.samples)
+        self._base_freq = self._lowpass(self._stretch_array(freq, self.samples))
 
     def get_amp(self):
         return self._amp
 
     def set_amp(self, amp:np.ndarray):
-        self._amp = self._stretch_array(amp, self.samples)
+        self._amp = self._lowpass(self._stretch_array(amp, self.samples))
 
     def get_filter_cutoff(self):
         return self._filter_cutoff
 
     def set_filter_cutoff(self, cutoff:np.ndarray):
-        self._filter_cutoff = self._stretch_array(cutoff, self.samples)
+        self._filter_cutoff = self._lowpass(self._stretch_array(cutoff, self.samples))
 
     def get_osc_shape(self):
         return self._osc_shape
 
     def set_osc_shape(self, shape:np.ndarray):
-        self._osc_shape = self._stretch_array(shape, self.samples)
+        self._osc_shape = self._lowpass(self._stretch_array(shape, self.samples))
 
     def get_parameters(self):
         return {
@@ -76,10 +76,7 @@ class MiniSynthSubtractive(MiniSynth):
         if not hasattr(self, '_base_freq') or not hasattr(self, '_amp'):
             raise ValueError("Base frequency and amplitude must be set before rendering.")
 
-        frequency = self._base_freq
-        shape = self._osc_shape
-
-        audio = self._wavetable_osc(frequency, shape, self.wavetable)
+        audio = self._square_saw_osc(frequency=self.get_base_freq(), blend=self.get_osc_shape())  
         audio *= self._amp
 
         audio = self._filter_audio(audio)
