@@ -5,14 +5,10 @@ from Scale import Scale
 from MiniSynth import MiniSynth
 
 class MiniSynthSubtractive(MiniSynth):
-    def __init__(self, wavetable, sr=44100, duration=10.0):
+    def __init__(self, sr=44100, duration=10.0):
         self.sr = sr
         self.duration = duration
         self.samples = int(sr * duration)
-        
-        if wavetable is None:
-            raise ValueError("Wavetable must be provided.")
-        self.wavetable = wavetable
 
         self.set_base_freq(np.array([440.0]))
         self.set_amp(np.array([1.0]))
