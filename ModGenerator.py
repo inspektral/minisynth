@@ -1,6 +1,7 @@
 import numpy as np
 from enum import Enum
-from Scale import Scale
+from .Scale import Scale
+from scipy.signal import butter, filtfilt
 
 class Mod(Enum):
     TIME = 0
@@ -13,21 +14,6 @@ class ModGenerator:
         self.sr = sr
         self.duration = duration
         self.samples = int(sr * duration)
-
-    # def render(self, min:float=0.0, max:float=1.0, scale:ModScale=ModScale.LINEAR):
-        
-    #     env = self._get_env()
-        
-    #     if scale == ModScale.LOGARITHMIC:
-    #         if min == 0:
-    #             env = max * (env ** 2)
-    #         else:
-    #             env = min * (max / min) ** env
-    #     elif scale == ModScale.LINEAR:
-    #         env = min + (max - min) * env
-
-    #     return env
-    
 
     def render(self):
         env =np.zeros(self.samples)
@@ -46,6 +32,7 @@ class ModGenerator:
 
             env[start_index:end_index] = segment
 
+        env = self._lowpass(env, cutoff=20.0, order=4)
         return env
 
 
@@ -98,3 +85,8 @@ class ModGenerator:
     
     def get_plot_points(self):
         return self.points[Mod.TIME.value,:], self.points[Mod.AMPLITUDE.value,:]
+    
+    def _lowpass(self, data, cutoff=20.0, order=4):
+        b, a = butter(order, cutoff / (0.5 * self.sr), btype='low')
+        return filtfilt(b, a, data)
+    

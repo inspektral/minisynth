@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.signal import butter, filtfilt
-from MiniSynth import MiniSynth
-from Scale import Scale
+from .MiniSynth import MiniSynth
+from .Scale import Scale
 
 class MiniSynthFM(MiniSynth):
     def __init__(self, wavetable, sr=44100, duration=10.0):

@@ -1,5 +1,5 @@
 import numpy as np
-from ModGenerator import ModGenerator
+from .ModGenerator import ModGenerator
 import MiniSynth
 import pandas as pd
 

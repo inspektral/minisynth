@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.signal import butter, filtfilt
 
-from Scale import Scale
-from MiniSynth import MiniSynth
+from .Scale import Scale
+from .MiniSynth import MiniSynth
 
 class MiniSynthSubtractive(MiniSynth):
     def __init__(self, sr=44100, duration=10.0):
