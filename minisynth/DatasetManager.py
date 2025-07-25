@@ -1,9 +1,7 @@
 import numpy as np
 from .ModGenerator import ModGenerator
-import MiniSynth
+from .MiniSynth import MiniSynth
 import pandas as pd
-
-from Scale import Scale
 
 class DatasetManager:
 

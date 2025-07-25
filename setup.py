@@ -5,13 +5,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="minisynth",
-    version="0.1.0",
+    version="0.1.2",
     author="inspektral",
     description="A Python-based modular synthesizer framework for generating audio and datasets",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/inspektral/minisynth",
-    packages=find_packages(),
+    packages=["minisynth"],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

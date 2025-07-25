@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
 from scipy.signal import butter, filtfilt
-from Scale import Scale
 
 class MiniSynth(ABC):
 
